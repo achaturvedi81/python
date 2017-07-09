@@ -1,1 +1,3 @@
 .DS_Store
+*.idea
+assignment-3/mnist_data/

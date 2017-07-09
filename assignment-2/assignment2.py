@@ -8,6 +8,19 @@ query_data = np.array([[69, 17.5], [66, 22], [70, 21.5], [69, 23.5]], dtype=np.f
 female_hist_meta = []
 male_hist_meta = []
 
+def write_excel_data(x, sheet_name, start_row, start_col):
+    print("writing x", x)
+    from pandas import DataFrame, ExcelWriter
+    from openpyxl import load_workbook
+    df=DataFrame(x)
+    book = load_workbook(data_file)
+    writer = ExcelWriter(data_file, engine='openpyxl')
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+    df.to_excel(writer, sheet_name=sheet_name,startrow=start_row-1, startcol=start_col-1, header=False, index=False)
+    writer.save()
+    writer.close()
+
 
 def read_excel_file():
     from pandas import read_excel
@@ -44,6 +57,11 @@ def read_excel_file():
     female_hist = create_hist(female_data, bin_size, hist_meta)
     male_hist = create_hist(male_data, bin_size, hist_meta)
 
+    norm_female_hist = create_normalized_hist(female_hist,h_slot,s_slot,female_data[:,0].size)
+    write_excel_data(norm_female_hist, "Reconstructed Female Histogram",7,2)
+    norm_male_hist = create_normalized_hist(male_hist,h_slot,s_slot,male_data[:,0].size)
+    write_excel_data(norm_male_hist, "Reconstructed Male Histogram",7,2)
+
     # female_hist_rec = create_hist(female_data, bin_size, female_hist_meta)
     # male_hist_rec = create_hist(male_data, bin_size, male_hist_meta)
     bayesian_meta = np.empty(5, dtype=object)
@@ -58,6 +76,18 @@ def read_excel_file():
     query_result_bayesian([66, 22], bayesian_meta)
     query_result_bayesian([70, 21.5], bayesian_meta)
     query_result_bayesian([69, 23.5], bayesian_meta)
+
+
+def create_normalized_hist(hist, h_slot, s_slot, total_count):
+    area = h_slot * s_slot
+
+    def normalize(x):
+        return (x/total_count)/area
+
+    vec_func = np.vectorize(normalize)
+    result = vec_func(hist)
+    #print("Normalized ", result)
+    return result
 
 
 def query_result_hist(male_hist, female_hist, query, hist_meta):
@@ -152,7 +182,7 @@ def create_hist(input_data, bin_size, hist_meta):
                          0].size
             j += 1
         i += 1
-    print(hist)
+    #print(hist)
     return hist
 
 
