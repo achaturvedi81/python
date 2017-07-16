@@ -99,18 +99,18 @@ def confusion_matrix(tc, cc):
     temp = np.append(tc, cc, axis=1)
     # print(temp)
     unique, counts = np.unique(temp, return_counts=True, axis=0)
-    # print(unique)
-    # print(counts)
-    cm[1, 0] = counts[0]
-    cm[1, 1] = counts[1]
+    print(unique)
+    print(counts)
+    cm[1, 1] = counts[0]
+    cm[1, 0] = counts[1]
     cm[0, 1] = counts[2]
     cm[0, 0] = counts[3]
-    # print(cm)
+    print(cm)
     return cm
 
 
 confusion_matrix = confusion_matrix(T, output_training_failure)
-#write_excel_data(confusion_matrix, "Performance", 10, 3)
+write_excel_data(confusion_matrix, "Performance", 10, 3)
 
 
 def accuracy(cm):
@@ -137,16 +137,16 @@ def ppv(cm):
     return cm[1,1]/(cm[1,1] + cm[0,1])
 
 print(accuracy(confusion_matrix))
-#write_excel_data([accuracy(confusion_matrix)], "Performance", 8, 7)
+write_excel_data([accuracy(confusion_matrix)], "Performance", 8, 7)
 
 print(sensitivity(confusion_matrix))
-#write_excel_data([sensitivity(confusion_matrix)], "Performance", 9, 7)
+write_excel_data([sensitivity(confusion_matrix)], "Performance", 9, 7)
 
 print(specifcity(confusion_matrix))
-#write_excel_data([specifcity(confusion_matrix)], "Performance", 10, 7)
+write_excel_data([specifcity(confusion_matrix)], "Performance", 10, 7)
 
 print(ppv(confusion_matrix))
-#write_excel_data([ppv(confusion_matrix)], "Performance", 11, 7)
+write_excel_data([ppv(confusion_matrix)], "Performance", 11, 7)
 
 
 result_training_type = np.dot(Xa, W6)
