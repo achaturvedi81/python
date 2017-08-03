@@ -174,9 +174,11 @@ def query_vector(row_num, xls_row_num, xls_row, write_xls):
 def query_result_hist(query):
     i = int(round((query[0] - hist_min[0])/pc1_slot)) - 1
     j = int(round((query[1] - hist_min[1])/pc2_slot)) - 1
-    prob = hist_8[i][j] / (hist_8[i][j] + hist_2[i][j])
-    #print ("Hist probability of being 8 : ", i, j, hist_8[i][j], hist_2[i][j], prob)
-    return round(prob,4)
+    prob_8 = hist_8[i][j] / (hist_8[i][j] + hist_2[i][j])
+    prob_2 = hist_2[i][j] / (hist_2[i][j] + hist_8[i][j])
+
+    #print ("Hist probability of being 8 : ", i, j, hist_8[i][j], hist_2[i][j], prob_8, prob_2)
+    return prob_8, prob_2
 
 
 def calc_gaussian_pd(x, mean, cov, count):
@@ -198,23 +200,29 @@ def query_result_bayesian(x):
     n8 = n_values[0]
     n2 = n_values[1]
 
-    prob = np.divide(calc_gaussian_pd(x, mu_8, cov_8, n8),
-                    np.add(calc_gaussian_pd(x, mu_8, cov_8, n8),
-                           calc_gaussian_pd(x, mu_2, cov_2, n2)))
-    #print("Bayes probability of being 8: ", prob)
-    return round(prob,4)
+    PD_8 = calc_gaussian_pd(x, mu_8, cov_8, n8)
+    PD_2 = calc_gaussian_pd(x, mu_2, cov_2, n2)
+
+    P_8 = n8/(n8+n2)
+    P_2 = n2/(n8+n2)
+     #print("BAYS ", PD_8, PD_2, P_8, P_2)
+    prob_8 = P_8*PD_8 / (P_8*PD_8 + P_2*PD_2)
+    prob_2 = P_2 * PD_2 / (P_8 * PD_8 + P_2 * PD_2)
+    #print("Bayes probability of being 8: ", prob_8, prob_2)
+
+    return prob_8, prob_2
 
 
 def find_training_accuracy():
     hist_hit = 0
     bayes_hit = 0
     for q in range(labels.size):
-    #for q in range(5000):
+    #for q in range(100):
         hist_prob = query_result_hist(query_vector(q, 0, 0, False))
-        hist_hit += 1 if ((labels[q] ==8 and hist_prob > 0.5) or (labels[q] == 2 and hist_prob < 0.5)) else 0
+        hist_hit += 1 if ((labels[q] ==8 and hist_prob[0] > hist_prob[1]) or (labels[q] == 2 and hist_prob[0] < hist_prob[1])) else 0
         bayes_prob = query_result_bayesian(query_vector(q, 0, 0, False))
-        bayes_hit += 1 if ((labels[q] == 8 and bayes_prob > 0.5) or (labels[q] == 2 and bayes_prob < 0.5)) else 0
-        #print(" Vector : ", q, labels[q], hist_prob, bayes_prob)
+        bayes_hit += 1 if ((labels[q] == 8 and bayes_prob[0] > bayes_prob[1]) or (labels[q] == 2 and bayes_prob[0] < bayes_prob[1])) else 0
+        print(" Vector : ", q, labels[q], hist_prob, bayes_prob)
 
     hist_success_rate = round((hist_hit/labels.size)*100, 2)
     write_result([hist_success_rate], 97, 2)
@@ -224,21 +232,21 @@ def find_training_accuracy():
     print("bayes_success_rate ", bayes_success_rate)
 
 
-prob_8 = query_result_hist(query_vector(6, 74, 88, True))
-write_result([prob_8], 89, 3)
-write_result([8 if prob_8>0.5 else 2], 89, 2)
+prob_result = query_result_hist(query_vector(6, 74, 88, True))
+write_result([prob_result[0]], 89, 3)
+write_result([8 if prob_result[0]>prob_result[1] else 2], 89, 2)
 
-prob_8 = query_result_bayesian(query_vector(6, 74, 88, False))
-write_result([prob_8], 90, 3)
-write_result([8 if prob_8>0.5 else 2], 90, 2)
+prob_result = query_result_bayesian(query_vector(6, 74, 88, False))
+write_result([prob_result[0]], 90, 3)
+write_result([8 if prob_result[0]>prob_result[1] else 2], 90, 2)
 
-prob_8 = query_result_hist(query_vector(9, 80, 92, True))
-write_result([prob_8], 93, 3)
-write_result([8 if prob_8>0.5 else 2], 93, 2)
+prob_result = query_result_hist(query_vector(9, 80, 92, True))
+write_result([prob_result[1]], 93, 3)
+write_result([8 if prob_result[0]>prob_result[1] else 2], 93, 2)
 
-prob_8 = query_result_bayesian(query_vector(9, 80, 92, False))
-write_result([prob_8], 94, 3)
-write_result([8 if prob_8>0.5 else 2], 94, 2)
+prob_result = query_result_bayesian(query_vector(9, 80, 92, False))
+write_result([prob_result[1]], 94, 3)
+write_result([8 if prob_result[0]>prob_result[1] else 2], 94, 2)
 
 find_training_accuracy()
 
@@ -252,4 +260,3 @@ ws = wb.worksheets[1]
 img = Image('scatter-plot.png')
 ws.add_image(img, 'A1')
 wb.save(excel_file)
-
