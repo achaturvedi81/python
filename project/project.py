@@ -142,7 +142,7 @@ def generate_tree_model(data, tree_model):
     #print("Making index", index, counter)
     tree_node = np.array([0, 0.0, 0.0, 0, 0])
     unique, counts = np.unique(data[:, data[0,:].size - 1], return_counts=True)
-    print("Counts", counts)
+    # print("Counts", counts)
     if counts.size > 1 and data[:, 0].size > 5:
         num_features = data[0,:].size - 1
         #last feature is the class label
@@ -209,7 +209,6 @@ def main() :
     # print("tree", tree_model[:,0])
     #print(test_data)
     test_tree_model(tree_model, training_data)
-
 
 
 main()
